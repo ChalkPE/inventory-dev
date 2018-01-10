@@ -17,20 +17,20 @@ function makeParam (data) {
 
 function checkBody (ctx, next) {
   if (ctx.request.body) return next()
-  else ctx.throw(401, 'Body is empty')
+  else ctx.throw(400, 'Body is empty')
 }
 
 async function checkAdmin (ctx, next) {
   const { username } = ctx.state.jwt
   const admin = await Admin.findOne({ username })
 
-  if (!admin) ctx.throw(401, 'Unidentified account')
+  if (!admin) ctx.throw(404, 'Unidentified account')
   await next(ctx.state.admin = admin)
 }
 
 async function checkMaster (ctx, next) {
   if (ctx.state.admin.master) await next()
-  else ctx.throw(401, 'You are not admin master')
+  else ctx.throw(403, 'You are not admin master')
 }
 
 const router = new Router({ prefix: '/admin' })
@@ -40,7 +40,7 @@ router.post('/auth', checkBody, async (ctx, next) => {
   const { username, password } = ctx.request.body
   const user = await Admin.findOne({ username })
 
-  if (!user) ctx.throw(401, 'Unidentified account')
+  if (!user) ctx.throw(404, 'Unidentified account')
   if (!user.validatePassword(password)) ctx.throw(401, 'Wrong password')
 
   const data = { username: user.username, _id: user._id }
@@ -67,7 +67,7 @@ router.get('/', checkMaster, async (ctx, next) => {
 router.post('/', checkBody, checkMaster, async (ctx, next) => {
   const param = makeParam(ctx.request.body)
   const user = await Admin.findOne({ username: param.username })
-  if (user) ctx.throw(401, 'This username is already taken')
+  if (user) ctx.throw(403, 'This username is already taken')
 
   await new Admin(param).save()
   ctx.body = { success: true }
@@ -76,13 +76,16 @@ router.post('/', checkBody, checkMaster, async (ctx, next) => {
 // delete admin account
 router.delete('/:username', checkMaster, async (ctx, next) => {
   const { username } = ctx.params
-  const user = await Admin.findOne({ username })
+  if (username === ctx.state.admin.username) ctx.throw(403, 'You cannot kill yourself')
 
+  const user = await Admin.findOne({ username })
   if (!user) ctx.throw(401, 'Unidentified account')
+
   await Admin.remove({ username })
   ctx.body = { success: true }
 })
 
+/*
 router.delete('/post/:title', checkBody, async (ctx, next) => {
   const productTitle = ctx.params.title
 
@@ -163,8 +166,9 @@ router.get('/order/daily', async (ctx, next) => {
 
 router.delete('/member/:name', async (ctx, next) => {
   let query = {'': ''}
-  /* let user = */ await User.remove(query)
+  await User.remove(query)
   await ctx.render('admin/hackout_list')
 })
+*/
 
 export default router
