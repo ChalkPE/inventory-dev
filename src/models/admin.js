@@ -37,11 +37,11 @@ AdminSchema.pre('save', async function (next) {
 
   try {
     let salt = await bcrypt.genSaltAsync(10)
-    console.log('password is' + user.password)
+    console.log('password is', user.password)
     let hash = await bcrypt.hashAsync(user.password, salt)
 
     user.password = hash
-    console.log(`hashed password is ${user.password}`)
+    console.log('hashed password is', user.password)
     next()
   } catch (e) {
     console.error('Failed to hash password', e)
