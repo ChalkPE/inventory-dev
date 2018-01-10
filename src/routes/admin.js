@@ -3,174 +3,8 @@ import Post from '../models/post'
 import User from '../models/user'
 import Admin from '../models/admin'
 import jwt from 'jsonwebtoken'
+import koaJwt from 'koa-jwt'
 import config from '../config'
-
-const router = new Router()
-const redirectToLogin = ctx => ctx.redirect('/admin/login')
-
-router.get('/admin', async (ctx, next) => {
-  if (!ctx.header.cookie) return redirectToLogin(ctx)
-
-  let token = ctx.header.cookie.split(';')[0].split('=')[1]
-  let decoded = await jwt.verify(token, config.token)
-  let admin = await Admin.findOne({username: decoded.username})
-
-  if (!admin || !admin.master) return redirectToLogin(ctx)
-
-  let adminList = await Admin.find({})
-  console.log('adminList', adminList)
-  await ctx.render('admin/manage_list', {adminList: adminList})
-})
-
-router.get('/admin/login', async (ctx, next) => {
-  await ctx.render('admin/login')
-})
-
-router.post('/admin/signin', async (ctx, next) => {
-  let userName = ctx.request.body.email
-  let password = ctx.request.body.password
-
-  try {
-    let user = await Admin.findOne({'username': userName})
-    if (user == null) ctx.body = {message: "Couldn't find your account"}
-    if (!user.validatePassword(password)) {
-      ctx.body = {message: 'Wrong password.'}
-    } else {
-      // let fullName = user.firstName + user.lastName
-      ctx.body = {token: jwt.sign({ username: user.username, _id: user._id }, config.token)}
-    }
-  } catch (e) {
-    console.error(e)
-    ctx.body = { message: 'Authentication failed.' }
-  }
-})
-
-router.post('/admin/signup', async (ctx, next) => {
-  let data = ctx.request.body
-  const param = await makeParam(data)
-
-  try {
-    const admin = new Admin(param)
-    await admin.save()
-    ctx.body = { success: true }
-  } catch (e) {
-    ctx.body = { success: false }
-    console.error('Failed to signup', e, param)
-  }
-})
-
-router.post('/admin/delete', async (ctx, next) => {
-  let jwtToken = ctx.headers.authorization
-  let data = ctx.request.body
-  let decoded = await jwt.verify(jwtToken, config.token)
-  let requester = await Admin.findOne({username: decoded.username})
-
-  if (requester.master) {
-    try {
-      console.log('username', data.username)
-      /* let admin = */ await Admin.remove({username: data.username})
-      ctx.body = {success: true}
-    } catch (e) {
-      ctx.body = {success: false}
-      console.error(e)
-    }
-  } else {
-    ctx.body = {error: 'You are not admin master'}
-  }
-})
-
-router.post('/admin/post/delete', async (ctx, next) => {
-  let jwtToken = ctx.headers.authorization
-  let data = ctx.request.body
-  let decoded = await jwt.verify(jwtToken, config.token)
-  let requester = await Admin.findOne({username: decoded.username})
-
-  if (requester.master) {
-    try {
-      console.log('data', data.productTitle)
-      let res = await Post.remove({productTitle: data.productTitle})
-      console.log('res', res)
-      ctx.body = {success: true}
-    } catch (e) {
-      ctx.body = {success: false}
-      console.error(e)
-    }
-  } else {
-    ctx.body = {error: 'You are not admin master'}
-  }
-})
-
-router.get('/admin/board', async (ctx, next) => {
-  let posts = []
-  await ctx.render('admin/board_list', posts)
-})
-
-router.get('/admin/brand_edit', async (ctx, next) => {
-  await ctx.render('admin/brand_edit')
-})
-
-router.get('/admin/board/regi', async (ctx, next) => {
-  await ctx.render('admin/board_register')
-})
-
-router.get('/admin/board/theme', async (ctx, next) => {
-  await ctx.render('admin/board_theme')
-})
-
-router.get('/admin/goods', async (ctx, next) => {
-  let posts = await Post.find({})
-  await ctx.render('admin/goods_list', {posts: posts})
-})
-
-router.get('/admin/goods/reg', async (ctx, next) => {
-  await ctx.render('admin/goods_register')
-})
-
-router.get('/admin/cate/config', async (ctx, next) => {
-  await ctx.render('admin/category_tree')
-})
-
-router.get('/admin/cate/config/brand', async (ctx, next) => {
-  await ctx.render('admin/category_tree_brand')
-})
-
-router.delete('/admin/board/:name', async (ctx, next) => {
-  let posts = await Post.remove({'productTitle': /ctx.body/})
-  if (posts) { ctx.body = {'su': true} } else { ctx.body = {'su': false} }
-})
-
-router.get('/admin/board/config', async (ctx, next) => {
-  let post = await Post.find()
-  let posts = {'posts': post, 'length': post.length}
-  await ctx.render('admin/article_list', posts)
-})
-
-router.get('/admin/member', async (ctx, next) => {
-  let users = await User.find({})
-  await ctx.render('admin/member_list', {users, memberLength: users.length})
-})
-
-router.get('/admin/order', async (ctx, next) => {
-  await ctx.render('admin/order_list_all')
-})
-
-router.get('/admin/order_cancel', async (ctx, next) => {
-  await ctx.render('admin/order_list_cancel')
-})
-
-router.get('/admin/member/daily', async (ctx, next) => {
-  await ctx.render('admin/member_day')
-})
-
-router.get('/admin/oder/daily', async (ctx, next) => {
-  await ctx.render('admin/order_day')
-})
-
-router.delete('/admin/member/:name', async (ctx, next) => {
-  let query = {'': ''}
-  /* let user = */ await User.remove(query)
-  await ctx.render('admin/hackout_list')
-})
 
 function makeParam (data) {
   return {
@@ -180,5 +14,154 @@ function makeParam (data) {
     name: data.name
   }
 }
+
+function checkBody (ctx, next) {
+  if (ctx.request.body) return next()
+  else ctx.throw(401, 'Body is empty')
+}
+
+async function checkAdmin (ctx, next) {
+  const { username } = ctx.state.jwt
+  const admin = await Admin.findOne({ username })
+
+  if (!admin) ctx.throw(401, 'Unidentified account')
+
+  ctx.state.admin = admin
+  console.log('taz')
+  await next()
+  console.log('was')
+}
+
+async function checkMaster (ctx, next) {
+  if (ctx.state.admin.master) await next()
+  else ctx.throw(401, 'You are not admin master')
+}
+
+const router = new Router({ prefix: '/admin' })
+
+// sign in
+router.post('/auth', checkBody, async (ctx, next) => {
+  const { username, password } = ctx.request.body
+  const user = await Admin.findOne({ username })
+
+  if (!user) ctx.throw(401, 'Unidentified account')
+  if (!user.validatePassword(password)) ctx.throw(401, 'Wrong password')
+
+  const data = { username: user.username, _id: user._id }
+  ctx.body = { token: jwt.sign(data, config.token) }
+})
+
+router
+  .use(koaJwt({ secret: config.token, key: 'jwt' }))
+  .use(checkAdmin)
+
+// get all admins
+router.get('/', checkMaster, async (ctx, next) => {
+  ctx.body = { list: await Admin.find({}) }
+})
+
+// sign up new admin
+router.post('/', checkBody, checkMaster, async (ctx, next) => {
+  const param = makeParam(ctx.request.body)
+  const user = await Admin.findOne({ username: param.username })
+  if (user) ctx.throw(401, 'This username is already taken')
+
+  await new Admin(param).save()
+  ctx.body = { success: true }
+})
+
+// delete admin account
+router.delete('/:username', checkBody, checkMaster, async (ctx, next) => {
+  const { username } = ctx.params
+  const user = await Admin.findOne({ username })
+
+  if (!user) ctx.throw(401, 'Unidentified account')
+  await Admin.remove({ username })
+  ctx.body = { success: true }
+})
+
+router.delete('/post/:title', checkBody, async (ctx, next) => {
+  const productTitle = ctx.params.title
+
+  try {
+    await Post.remove({ productTitle })
+    ctx.body = { success: true }
+  } catch (e) {
+    console.error(e)
+    ctx.throw(500, 'Failed to delete post')
+  }
+})
+
+router.get('/board', async (ctx, next) => {
+  let posts = []
+  await ctx.render('admin/board_list', posts)
+})
+
+router.get('/brand_edit', async (ctx, next) => {
+  await ctx.render('admin/brand_edit')
+})
+
+router.get('/board/regi', async (ctx, next) => {
+  await ctx.render('admin/board_register')
+})
+
+router.get('/board/theme', async (ctx, next) => {
+  await ctx.render('admin/board_theme')
+})
+
+router.get('/goods', async (ctx, next) => {
+  let posts = await Post.find({})
+  await ctx.render('admin/goods_list', {posts: posts})
+})
+
+router.get('/goods/reg', async (ctx, next) => {
+  await ctx.render('admin/goods_register')
+})
+
+router.get('/cate/config', async (ctx, next) => {
+  await ctx.render('admin/category_tree')
+})
+
+router.get('/cate/config/brand', async (ctx, next) => {
+  await ctx.render('admin/category_tree_brand')
+})
+
+router.delete('/board/:name', async (ctx, next) => {
+  let posts = await Post.remove({'productTitle': /ctx.body/})
+  if (posts) { ctx.body = {'su': true} } else { ctx.body = {'su': false} }
+})
+
+router.get('/board/config', async (ctx, next) => {
+  let post = await Post.find()
+  let posts = {'posts': post, 'length': post.length}
+  await ctx.render('admin/article_list', posts)
+})
+
+router.get('/member', async (ctx, next) => {
+  let users = await User.find({})
+  await ctx.render('admin/member_list', {users, memberLength: users.length})
+})
+
+router.get('/order', async (ctx, next) => {
+  await ctx.render('admin/order_list_all')
+})
+
+router.get('/order_cancel', async (ctx, next) => {
+  await ctx.render('admin/order_list_cancel')
+})
+
+router.get('/member/daily', async (ctx, next) => {
+  await ctx.render('admin/member_day')
+})
+
+router.get('/order/daily', async (ctx, next) => {
+  await ctx.render('admin/order_day')
+})
+
+router.delete('/member/:name', async (ctx, next) => {
+  let query = {'': ''}
+  /* let user = */ await User.remove(query)
+  await ctx.render('admin/hackout_list')
+})
 
 export default router
