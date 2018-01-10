@@ -43,12 +43,16 @@ router.post('/auth', checkBody, async (ctx, next) => {
   if (!user) ctx.throw(401, 'Unidentified account')
   if (!user.validatePassword(password)) ctx.throw(401, 'Wrong password')
 
-  ctx.body = { token: jwt.sign(user, config.token) }
+  const data = { username: user.username, _id: user._id }
+  ctx.body = { token: jwt.sign(data, config.token) }
 })
 
 router
   .use(koaJwt({ secret: config.token, key: 'jwt' }))
   .use(checkAdmin)
+
+// get my auth info
+router.get('/auth', (ctx, next) => (ctx.body = ctx.state.admin))
 
 // get all admins
 router.get('/', checkMaster, async (ctx, next) => {
