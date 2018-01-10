@@ -43,8 +43,7 @@ router.post('/auth', checkBody, async (ctx, next) => {
   if (!user) ctx.throw(401, 'Unidentified account')
   if (!user.validatePassword(password)) ctx.throw(401, 'Wrong password')
 
-  const data = { username: user.username, _id: user._id }
-  ctx.body = { token: jwt.sign(data, config.token) }
+  ctx.body = { token: jwt.sign(user, config.token) }
 })
 
 router
