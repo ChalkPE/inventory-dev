@@ -1,27 +1,25 @@
 import Router from 'koa-router'
 import Post from '../models/post'
 import User from '../models/user'
-// import Convo from '../models/convo'
 import Admin from '../models/admin'
 import jwt from 'jsonwebtoken'
 import config from '../config'
 
 const router = new Router()
-// const redirectToLogin = ctx => ctx.redirect('/admin/login')
+const redirectToLogin = ctx => ctx.redirect('/admin/login')
 
 router.get('/admin', async (ctx, next) => {
-  if (!ctx.header.cookie) await ctx.redirect('/admin/login')
+  if (!ctx.header.cookie) return redirectToLogin(ctx)
+
   let token = ctx.header.cookie.split(';')[0].split('=')[1]
   let decoded = await jwt.verify(token, config.token)
   let admin = await Admin.findOne({username: decoded.username})
 
-  if (!admin || !admin.master) {
-    await ctx.redirect('/admin/login')
-  } else {
-    let adminList = await Admin.find({})
-    console.log('adminList', adminList)
-    await ctx.render('admin/manage_list', {adminList: adminList})
-  }
+  if (!admin || !admin.master) return redirectToLogin(ctx)
+
+  let adminList = await Admin.find({})
+  console.log('adminList', adminList)
+  await ctx.render('admin/manage_list', {adminList: adminList})
 })
 
 router.get('/admin/login', async (ctx, next) => {

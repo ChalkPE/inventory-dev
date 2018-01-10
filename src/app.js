@@ -1,5 +1,3 @@
-import 'babel-polyfill'
-
 import Koa from 'koa'
 import serve from 'koa-static'
 import logger from 'koa-chalk-logger'
