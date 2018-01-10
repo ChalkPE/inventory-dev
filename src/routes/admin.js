@@ -52,7 +52,11 @@ router
   .use(checkAdmin)
 
 // get my auth info
-router.get('/auth', (ctx, next) => (ctx.body = ctx.state.admin))
+router.get('/auth', (ctx, next) => {
+  ctx.body = Object.assign({}, ctx.state.admin.toJSON(), {
+    password: undefined, __v: undefined, _id: undefined
+  })
+})
 
 // get all admins
 router.get('/', checkMaster, async (ctx, next) => {
