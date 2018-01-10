@@ -25,11 +25,7 @@ async function checkAdmin (ctx, next) {
   const admin = await Admin.findOne({ username })
 
   if (!admin) ctx.throw(401, 'Unidentified account')
-
-  ctx.state.admin = admin
-  console.log('taz')
-  await next()
-  console.log('was')
+  await next(ctx.state.admin = admin)
 }
 
 async function checkMaster (ctx, next) {
@@ -71,7 +67,7 @@ router.post('/', checkBody, checkMaster, async (ctx, next) => {
 })
 
 // delete admin account
-router.delete('/:username', checkBody, checkMaster, async (ctx, next) => {
+router.delete('/:username', checkMaster, async (ctx, next) => {
   const { username } = ctx.params
   const user = await Admin.findOne({ username })
 
