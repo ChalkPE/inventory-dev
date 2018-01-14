@@ -1,6 +1,6 @@
 import Router from 'koa-router'
-import Post from '../models/post'
-import User from '../models/user'
+// import Post from '../models/post'
+// import User from '../models/user'
 import Admin from '../models/admin'
 import jwt from 'jsonwebtoken'
 import koaJwt from 'koa-jwt'
@@ -66,8 +66,10 @@ router.get('/', checkMaster, async (ctx, next) => {
 // sign up new admin
 router.post('/', checkBody, checkMaster, async (ctx, next) => {
   const param = makeParam(ctx.request.body)
-  const user = await Admin.findOne({ username: param.username })
-  if (user) ctx.throw(403, 'This username is already taken')
+  const { email, username } = param
+
+  if (await Admin.findOne({ email })) ctx.throw(403, 'This email is already taken')
+  if (await Admin.findOne({ username })) ctx.throw(403, 'This username is already taken')
 
   await new Admin(param).save()
   ctx.body = { success: true }
