@@ -1,6 +1,6 @@
 import Router from 'koa-router'
 import Post from '../models/post'
-// import User from '../models/user'
+import User from '../models/user'
 import Admin from '../models/admin'
 import jwt from 'jsonwebtoken'
 import koaJwt from 'koa-jwt'
@@ -100,6 +100,12 @@ router.delete('/post/:url', async (ctx, next) => {
   await Post.remove({ productURL })
   ctx.body = { success: true }
 })
+
+router.get('/user', async (ctx, next) => {
+  ctx.body = { users: await User.find({}) }
+})
+
+// TODO: 회원 제재
 
 /*
 router.get('/board', async (ctx, next) => {
