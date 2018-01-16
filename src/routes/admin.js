@@ -1,5 +1,5 @@
 import Router from 'koa-router'
-// import Post from '../models/post'
+import Post from '../models/post'
 // import User from '../models/user'
 import Admin from '../models/admin'
 import jwt from 'jsonwebtoken'
@@ -87,19 +87,21 @@ router.delete('/:username', checkMaster, async (ctx, next) => {
   ctx.body = { success: true }
 })
 
-/*
-router.delete('/post/:title', checkBody, async (ctx, next) => {
-  const productTitle = ctx.params.title
-
-  try {
-    await Post.remove({ productTitle })
-    ctx.body = { success: true }
-  } catch (e) {
-    console.error(e)
-    ctx.throw(500, 'Failed to delete post')
-  }
+router.get('/post', async (ctx, next) => {
+  ctx.body = { posts: await Post.find({}) }
 })
 
+router.delete('/post/:url', async (ctx, next) => {
+  const productURL = ctx.params.url
+
+  const post = await Post.findOne({ productURL })
+  if (!post) ctx.throw(401, 'Unidentified post')
+
+  await Post.remove({ productURL })
+  ctx.body = { success: true }
+})
+
+/*
 router.get('/board', async (ctx, next) => {
   let posts = []
   await ctx.render('admin/board_list', posts)
