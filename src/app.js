@@ -15,6 +15,8 @@ import chatfeature from './util/chat'
 import socketIO from 'socket.io'
 import redis from 'socket.io-redis'
 import mongoose from 'mongoose'
+import Admin from './models/admin'
+
 mongoose.Promise = global.Promise
 
 mongoose
@@ -29,6 +31,14 @@ function startApp () {
     fields: 'body',
     IncomingForm: form
   }
+
+  new Admin({
+    username: 'admin',
+    password: 'admin',
+    email: 'admin@admin.com',
+    master: true,
+    name: 'Admin'
+  }).save(::console.log)
 
   app.keys = ['secret', 'key']
   require('./util/passport')
