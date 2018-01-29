@@ -51,6 +51,20 @@ router
   .use(koaJwt({ secret: config.token, key: 'jwt' }))
   .use(checkAdmin)
 
+async function fetchList (ctx, model) {
+  const { sort, size, page } = ctx.request.body
+  return paged(sorted(model, sort), size, page)
+}
+
+function paged (cursor, size, page) {
+  return size ? cursor.skip(size * page).limit(size) : cursor
+}
+
+function sorted (model, sort) {
+  const cursor = model.find()
+  return sort ? cursor.sort(sort) : cursor
+}
+
 // get my auth info
 router.get('/auth', (ctx, next) => {
   ctx.body = Object.assign({}, ctx.state.admin.toJSON(), {
@@ -60,7 +74,7 @@ router.get('/auth', (ctx, next) => {
 
 // get all admins
 router.get('/', checkMaster, async (ctx, next) => {
-  ctx.body = { list: await Admin.find({}) }
+  ctx.body = { list: await fetchList(ctx, Admin) }
 })
 
 // sign up new admin
@@ -88,7 +102,7 @@ router.delete('/:username', checkMaster, async (ctx, next) => {
 })
 
 router.get('/post', async (ctx, next) => {
-  ctx.body = { posts: await Post.find({}) }
+  ctx.body = { posts: await fetchList(ctx, Post) }
 })
 
 router.delete('/post/:url', async (ctx, next) => {
@@ -102,7 +116,7 @@ router.delete('/post/:url', async (ctx, next) => {
 })
 
 router.get('/user', async (ctx, next) => {
-  ctx.body = { users: await User.find({}) }
+  ctx.body = { users: await fetchList(ctx, User) }
 })
 
 // TODO: 회원 제재
