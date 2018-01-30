@@ -52,13 +52,13 @@ router
   .use(checkAdmin)
 
 async function fetchList (ctx, model) {
-  const { sort, size, page } = ctx.request.body || {}
+  const { sort, size, page } = ctx.request.query || {}
 
   let cursor = model.find({})
   if (sort) cursor = cursor.sort(sort)
-  if (size) cursor = cursor.skip(size * page).limit(size)
+  if (size) cursor = cursor.skip(size * page).limit(size * 1)
 
-  return { list: await cursor.exec() }
+  return { list: await cursor.exec(), total: await model.count() }
 }
 
 // get my auth info
