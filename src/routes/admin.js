@@ -53,7 +53,7 @@ router
 
 async function fetchList (ctx, model) {
   const { sort, size, page } = ctx.request.body
-  return paged(sorted(model, sort), size, page)
+  return { list: await paged(sorted(model, sort), size, page) }
 }
 
 function paged (cursor, size, page) {
@@ -74,7 +74,7 @@ router.get('/auth', (ctx, next) => {
 
 // get all admins
 router.get('/', checkMaster, async (ctx, next) => {
-  ctx.body = { list: await fetchList(ctx, Admin) }
+  ctx.body = await fetchList(ctx, Admin)
 })
 
 // sign up new admin
@@ -102,7 +102,7 @@ router.delete('/:username', checkMaster, async (ctx, next) => {
 })
 
 router.get('/post', async (ctx, next) => {
-  ctx.body = { posts: await fetchList(ctx, Post) }
+  ctx.body = await fetchList(ctx, Post)
 })
 
 router.delete('/post/:url', async (ctx, next) => {
@@ -116,7 +116,7 @@ router.delete('/post/:url', async (ctx, next) => {
 })
 
 router.get('/user', async (ctx, next) => {
-  ctx.body = { users: await fetchList(ctx, User) }
+  ctx.body = await fetchList(ctx, User)
 })
 
 // TODO: 회원 제재
