@@ -189,7 +189,7 @@ router.get('/listings/:id', async (ctx, next) => {
   try {
     let postData = await Post.findOne({productURL: ctx.params.id})
     let sellerInfo = await User.findOne({username: postData.seller})
-    /* let itemCounts = */ await rp(`http://50.116.7.88/post/count/${postData.seller}`)
+    /* let itemCounts = */ await rp(`http://localhost:8080/post/count/${postData.seller}`)
     let allPosts = await Post.find({productURL: { $ne: ctx.params.id }}).limit(2).sort({$natural: -1})
 
     if (decoded) {
