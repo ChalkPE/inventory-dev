@@ -2,6 +2,7 @@ import Router from 'koa-router'
 import Post from '../models/post'
 import User from '../models/user'
 import Admin from '../models/admin'
+import Comment from '../models/comment'
 import jwt from 'jsonwebtoken'
 import koaJwt from 'koa-jwt'
 import config from '../config'
@@ -51,14 +52,15 @@ router
   .use(koaJwt({ secret: config.token, key: 'jwt' }))
   .use(checkAdmin)
 
-async function fetchList (ctx, model) {
+async function fetchList (ctx, model, query = {}) {
   const { sort, size, page } = ctx.request.query || {}
 
-  let cursor = model.find({})
+  let cursor = model.find(query)
   if (sort) cursor = cursor.sort(sort)
   if (size) cursor = cursor.skip(size * page).limit(size * 1)
 
-  return { list: await cursor.exec(), total: await model.count() }
+  const list = await cursor.exec()
+  return { list, total: await model.find(query).count() }
 }
 
 // get my auth info
@@ -113,6 +115,10 @@ router.delete('/post/:url', async (ctx, next) => {
 
 router.get('/user', async (ctx, next) => {
   ctx.body = await fetchList(ctx, User)
+})
+
+router.get('/comment/:url', async (ctx, next) => {
+  ctx.body = await fetchList(ctx, Comment, { postURL: ctx.params.url })
 })
 
 // TODO: 회원 제재

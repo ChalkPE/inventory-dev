@@ -1,5 +1,4 @@
 import mongoose, { Schema } from 'mongoose'
-// import User from './user'
 
 const PostSchema = mongoose.Schema({
   productTitle: {
