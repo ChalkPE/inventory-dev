@@ -117,11 +117,21 @@ router.get('/user', async (ctx, next) => {
   ctx.body = await fetchList(ctx, User)
 })
 
+router.delete('/user/:username', async (ctx, next) => {
+  const { username } = ctx.params
+  const { bannedUntil } = ctx.request.query
+
+  const update = { bannedUntil: new Date(Number(bannedUntil)) }
+  ctx.body = { success: true, result: await User.findOneAndUpdate({ username }, update) }
+})
+
 router.get('/comment/:url', async (ctx, next) => {
   ctx.body = await fetchList(ctx, Comment, { postURL: ctx.params.url })
 })
 
-// TODO: 회원 제재
+router.delete('/comment/:id', async (ctx, next) => {
+  ctx.body = { success: true, result: await Comment.findByIdAndRemove(ctx.params.id) }
+})
 
 /*
 router.get('/board', async (ctx, next) => {

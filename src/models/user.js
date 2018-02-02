@@ -48,7 +48,9 @@ const UserSchema = mongoose.Schema({
   zipCode: Number,
   address1: String,
   mobile: Number,
-  newsletter: Boolean
+  newsletter: Boolean,
+
+  bannedUntil: Date
 })
 
 UserSchema.pre('save', async function (next) {

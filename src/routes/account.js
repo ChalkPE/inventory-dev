@@ -21,16 +21,17 @@ router.post('/signup', async (ctx, next) => {
 })
 
 router.post('/login', async (ctx, next) => {
-  let userName = ctx.request.body.email
+  let username = ctx.request.body.email
   let password = ctx.request.body.password
 
   try {
-    let user = await User.findOne({'username': userName})
+    let user = await User.findOne({username})
     if (user == null) ctx.body = {message: "Couldn't find your account"}
     if (!user.validatePassword(password)) {
       ctx.body = {message: 'Wrong password.'}
+    } else if (Date.now() < user.bannedUntil.getTime()) {
+      ctx.body = {message: 'Your account has been banned until ' + user.bannedUntil.toGMTString()}
     } else {
-      // let fullName = user.firstName + user.lastName
       ctx.body = {token: jwt.sign({ username: user.username, country: user.country, gender: user.gender, _id: user._id }, config.token)}
     }
   } catch (e) {
