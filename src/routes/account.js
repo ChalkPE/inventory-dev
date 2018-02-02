@@ -29,7 +29,7 @@ router.post('/login', async (ctx, next) => {
     if (user == null) ctx.body = {message: "Couldn't find your account"}
     if (!user.validatePassword(password)) {
       ctx.body = {message: 'Wrong password.'}
-    } else if (Date.now() < user.bannedUntil.getTime()) {
+    } else if (user.bannedUntil && Date.now() < user.bannedUntil.getTime()) {
       ctx.body = {message: 'Your account has been banned until ' + user.bannedUntil.toGMTString()}
     } else {
       ctx.body = {token: jwt.sign({ username: user.username, country: user.country, gender: user.gender, _id: user._id }, config.token)}

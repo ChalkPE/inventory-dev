@@ -32,14 +32,6 @@ function startApp () {
     IncomingForm: form
   }
 
-  new Admin({
-    username: 'admin',
-    password: 'admin',
-    email: 'admin@admin.com',
-    master: true,
-    name: 'Admin'
-  }).save(::console.log)
-
   app.keys = ['secret', 'key']
   require('./util/passport')
 

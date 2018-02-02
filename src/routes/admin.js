@@ -130,7 +130,10 @@ router.get('/comment/:url', async (ctx, next) => {
 })
 
 router.delete('/comment/:id', async (ctx, next) => {
-  ctx.body = { success: true, result: await Comment.findByIdAndRemove(ctx.params.id) }
+  await Comment.findByIdAndRemove(ctx.params.id)
+  await Post.update({}, { $pull: { comments: ctx.params.id } }, { multi: true })
+
+  ctx.body = { success: true }
 })
 
 /*
