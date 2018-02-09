@@ -1,11 +1,13 @@
 import Router from 'koa-router'
+import koaJwt from 'koa-jwt'
+import jwt from 'jsonwebtoken'
+import config from '../config'
+
 import Post from '../models/post'
 import User from '../models/user'
 import Admin from '../models/admin'
 import Comment from '../models/comment'
-import jwt from 'jsonwebtoken'
-import koaJwt from 'koa-jwt'
-import config from '../config'
+import Message from '../models/message'
 
 function makeParam (data) {
   return {
@@ -136,78 +138,9 @@ router.delete('/comment/:id', async (ctx, next) => {
   ctx.body = { success: true }
 })
 
-/*
-router.get('/board', async (ctx, next) => {
-  let posts = []
-  await ctx.render('admin/board_list', posts)
+router.get('/message', async (ctx, next) => {
+  const { regex: $regex } = ctx.request.query
+  ctx.body = await fetchList(ctx, Message, { $regex })
 })
-
-router.get('/brand_edit', async (ctx, next) => {
-  await ctx.render('admin/brand_edit')
-})
-
-router.get('/board/regi', async (ctx, next) => {
-  await ctx.render('admin/board_register')
-})
-
-router.get('/board/theme', async (ctx, next) => {
-  await ctx.render('admin/board_theme')
-})
-
-router.get('/goods', async (ctx, next) => {
-  let posts = await Post.find({})
-  await ctx.render('admin/goods_list', {posts: posts})
-})
-
-router.get('/goods/reg', async (ctx, next) => {
-  await ctx.render('admin/goods_register')
-})
-
-router.get('/cate/config', async (ctx, next) => {
-  await ctx.render('admin/category_tree')
-})
-
-router.get('/cate/config/brand', async (ctx, next) => {
-  await ctx.render('admin/category_tree_brand')
-})
-
-router.delete('/board/:name', async (ctx, next) => {
-  let posts = await Post.remove({'productTitle': /ctx.body/})
-  if (posts) { ctx.body = {'su': true} } else { ctx.body = {'su': false} }
-})
-
-router.get('/board/config', async (ctx, next) => {
-  let post = await Post.find()
-  let posts = {'posts': post, 'length': post.length}
-  await ctx.render('admin/article_list', posts)
-})
-
-router.get('/member', async (ctx, next) => {
-  let users = await User.find({})
-  await ctx.render('admin/member_list', {users, memberLength: users.length})
-})
-
-router.get('/order', async (ctx, next) => {
-  await ctx.render('admin/order_list_all')
-})
-
-router.get('/order_cancel', async (ctx, next) => {
-  await ctx.render('admin/order_list_cancel')
-})
-
-router.get('/member/daily', async (ctx, next) => {
-  await ctx.render('admin/member_day')
-})
-
-router.get('/order/daily', async (ctx, next) => {
-  await ctx.render('admin/order_day')
-})
-
-router.delete('/member/:name', async (ctx, next) => {
-  let query = {'': ''}
-  await User.remove(query)
-  await ctx.render('admin/hackout_list')
-})
-*/
 
 export default router
