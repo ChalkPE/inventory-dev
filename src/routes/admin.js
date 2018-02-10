@@ -9,15 +9,6 @@ import Admin from '../models/admin'
 import Comment from '../models/comment'
 import Message from '../models/message'
 
-function makeParam (data) {
-  return {
-    username: data.username,
-    password: data.password,
-    email: data.email,
-    name: data.name
-  }
-}
-
 function checkBody (ctx, next) {
   if (ctx.request.body) return next()
   else ctx.throw(400, 'Body is empty')
@@ -79,13 +70,12 @@ router.get('/', checkMaster, async (ctx, next) => {
 
 // sign up new admin
 router.post('/', checkBody, checkMaster, async (ctx, next) => {
-  const param = makeParam(ctx.request.body)
-  const { email, username } = param
+  const { username, password, email, name } = ctx.request.body
 
   if (await Admin.findOne({ email })) ctx.throw(403, 'This email is already taken')
   if (await Admin.findOne({ username })) ctx.throw(403, 'This username is already taken')
 
-  await new Admin(param).save()
+  await new Admin({ username, password, email, name }).save()
   ctx.body = { success: true }
 })
 
