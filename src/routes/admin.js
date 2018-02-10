@@ -129,8 +129,10 @@ router.delete('/comment/:id', async (ctx, next) => {
 })
 
 router.get('/message', async (ctx, next) => {
-  const { regex: $regex } = ctx.request.query
-  ctx.body = await fetchList(ctx, Message, { $regex })
+  const { regex } = ctx.request.query
+  const query = regex && { description: { $regex: regex, $options: 'i' } }
+
+  ctx.body = await fetchList(ctx, Message, query)
 })
 
 export default router
