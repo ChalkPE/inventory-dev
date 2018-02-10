@@ -1,12 +1,14 @@
 import 'babel-polyfill'
 
 import Koa from 'koa'
-import serve from 'koa-static'
-import logger from 'koa-chalk-logger'
+import etag from 'koa-etag'
 import views from 'koa-views'
+import serve from 'koa-static'
 import session from 'koa-session'
 import passport from 'koa-passport'
+import logger from 'koa-chalk-logger'
 import bodyParser from 'koa-better-body'
+import conditional from 'koa-conditional-get'
 import path from 'path'
 import routes from './routes'
 import config from './config'
@@ -37,6 +39,8 @@ function startApp () {
 
   app
     .use(logger())
+    .use(conditional())
+    .use(etag())
     .use(serve(dist))
     .use(session({}, app))
     .use(bodyParser(bpOption))
