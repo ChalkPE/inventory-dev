@@ -95,13 +95,21 @@ router.get('/post', async (ctx, next) => {
   ctx.body = await fetchList(ctx, Post)
 })
 
-router.delete('/post/:url', async (ctx, next) => {
+async function checkPost (ctx, next) {
   const productURL = ctx.params.url
+  ctx.post = await Post.findOne({ productURL })
 
-  const post = await Post.findOne({ productURL })
-  if (!post) ctx.throw(401, 'Unidentified post')
+  if (ctx.post) await next()
+  else ctx.throw(401, 'Unidentified post')
+}
 
-  await Post.remove({ productURL })
+router.put('/post/:url', checkPost, async (ctx, next) => {
+  await Object.assign(ctx.post, ctx.request.query).save()
+  ctx.body = { success: true }
+})
+
+router.delete('/post/:url', checkPost, async (ctx, next) => {
+  await Post.remove({ productURL: ctx.post.productURL })
   ctx.body = { success: true }
 })
 
