@@ -58,6 +58,7 @@
     "eslint-plugin-node": "^5.2.1",
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1",
+    "nodemon": "^1.17.1",
     "pm2": "^2.10.1"
   },
   "scripts": {
